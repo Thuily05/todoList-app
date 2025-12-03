@@ -1,0 +1,118 @@
+OVERALL RECOMMENDATIONS: 
+- chỉ sử dụng Redux cho các biến có thể thay đổi, các biến được chia sẻ cục bộ
+- sử dụng kết hợp Next.js state (search params, route parameter, form state, etc), react context và react hooks cho tất cả quản lý
+trạng thái.
+
+DATA FETCHING: Inside your layout, you can fetch data on the client-side using useEffect or a library like SWR. 
+Because this file is not a Page, you cannot use getStaticProps or getServerSideProps currently.
+
+Page Router and App router: 
+- Page router có một bộ định tuyến dựa trên hệ thống file (files-system based router) được xây dựng dựa trên (built-on) trên 
+concept of pages (cấu trúc của thư mục pages). Khi 1 file được thêm vào thư mục pages, nó sẽ tự động có sẵn như 1 route.
++ example: pages/about.js có thể truy cập tại /about.
++ router cũng sẽ tự động định tuyến file tên index tới root of the directory: example: pages/index.js -> /
+page/blog/index.js -> /blog
+- App router: Next.js sử dụng file-system based routing, bạn có thể sử dụng folders và files để khai báo routes. (page.tsx và layout.tsx)
+
+REDUX TOOLKIT SETUP WITH NEXT.JS
+Next.js: 
+- không tạo ra 1 HTTP server thực sự như Apache, Nginx hay Node.js raw
+- khi chạy npm run dev, tạo ra 1 development server tạm thời, dùng node.js để build file, routing, render React, xử lý hot reload
+- là framework chạy trong 1 server enviroment mà hosting cung cấp
+- có môi trường chạy giống backend, có thể viết API, xử lý request, truy cập DB
+- next.js là meta-framework chạy trên React, có runtime cho server + client
+
+REDUX TOOLKIT SETUP WITH NEXT.JS
+1. Next.js đem lại 1 số thử thách đặc trưng cho việc sử dụng Redux như sau:
+- Per-request safe Redux store creation: a next.js server có thể xử lý nhiều requests đồng thời. Điều này có nghĩa Redux store phải được tạo
+theo từng request và không được chia sẽ giữa các requests
+- SSR-friendly store hydration: Next.js applications được render 2 lần, lần đầu ở trên server và lần thứ 2 ở client. Nếu nội dung ở trang được
+render ở client và server không giống nhau sẽ gây ra 'hydration error'. Vì thế, Redux store sẽ phải được khởi tạo trên server rồi khởi tạo lại
+ ở trên client với cùng một data để tránh lỗi hydration
+ //hydration error: server render ra 1 thứ, client render ra 1 thứ -> React không đồng bộ được -> Lỗi hydration
+ - SPA routing support: Next.js hỗ trợ 1 hybrid model for client side routing. Lần tải trang đầu tiên của người dùng là kết quả của server side rendering 
+ từ máy chủ web. Các lần điều hướng trang tiếp theo sẽ được hỗ trợ bởi client. Điều này có nghĩa, nếu redux-store được tạo ở layout 
+ trong next.js (tồn tại xuyên suốt app): 
++ Dữ liệu chỉ dành cho từng trang -> phải reset (chỉ reset phần liên quan) khi chuyển hướng trang 
++ Dữ liệu chung toàn app -> giữ nguyên, không reset
+- Server caching friendly: các phiên bản gần đây của Next.js (đặc biệt với các ứng dụng sử dụng kiến trúc App Router) hỗ trợ mạnh mẽ server caching.
+Kiến trúc store lý tưởng nên tương thích với cơ chế cache này
+- Có 2 kiểu kiến trúc cho 1 ứng dụng next.js là Pages Router và App Router. Hướng dẫn này sẽ tập trung vào việc sử dụng Redux với
+kiến trúc App Router - lựa chọn kiến trúc mặc định mới cho Next.js.
+
+2. HOW TO READ THIS GUIDE:
+Setup: tạo 1 next project, add dependencies là @reduxjs/toolkit , react-redux.
+
+3. APP ROUTER ARCHITECTURE AND REDUX
+- Tính năng mới của Next.js App router là sự hỗ trợ của React Server Components (RSCs). RSCs là một kiểu React component đặc biệt - chỉ
+renders ở trên server, đối lập với 'client' components - render ở trên cả client và server. RSCs có thể được khai báo như async functions
+và trả về promises trong khi rendering, ví dụ nhự chúng có thể tạo một yêu cầu bất đồng bộ để render dữ liệu.
+- RSCs có khả năng tạm dừng render cho đến khi dữ liệu từ API hoặc DB được lấy xong, có nghĩa là, với App Router, bạn sẽ không thể dùng 
+getServerSideProps để lấy data for rendering. Bất kì component nào trong cây thư mục đều có thể gọi yêu cầu bất đồng bộ để lấy data. 
+Mặc dù đặc điểm đó khá  tiện lợi, điều đó có nghĩa là khi bạn định nghĩa biến toàn cục (ví dụ như Redux store), chúng sẽ được chia sẽ 
+giữa các requests. Đây là một vấn đề bởi vì Redux store có thể sẽ bị nhiễm bẩn (contanminated with) bởi dữ liệu từ các requests khác nhau.
+- Dựa trên kiến trúc của App Router, nhà phát triển đề xuất cách sử dụng phù hợp với Redux:
++ no global stores - bởi vì Redux store được share giữa các requests, nó không nên được khai báo như 1 biến global. Thay vào đó, the store 
+nên được tạo mỗi request. 
++ RSCs không nên đọc hay viết Redux store - RSCs không thể sử dụng hook hay context. Chúng không được thiết kế để có state. Việc 1 RSCs đọc 
+hoặc ghi dữ liệu từ một global store vi phạm kiến trúc của App Router trong Next.js.
++ The store should only contain mutabale data (dữ liệu có thể thay đổi được) - khuyên khích sử dụng Redux một cách tiết kiệm cho dữ liệu có
+tính toàn cục và có thể thay đổi.
+Các đề xuất trên chỉ áp dụng cho ứng dụng viết bằng Next.js App Router. SPAs không chạy ở trên server và vì thế có thể define store như 1 
+biến toàn cục. SPAs không cần phải lo về RSCs bởi vì chúng không tồn tại trong SPAs. Các singleton stor cso thể lưu trữ bất kì data nào bạn muốn.
+
+4. FOLDER STRUCTURE:
+Redux logic nên nằm ở trong 1 thư mục tách biệt, bên cạnh /app folder. Ví dụ:
+/app 
+layout.tsx 
+page.tsx 
+StoreProvider.tsx
+/lib 
+store.ts 
+/features
+    /todos
+        todosSlice.ts
+
+5. INITIAL SETUP:
+Chúng ta cần tạo một file cho Redux store, cũng như kiểu dữ liệu RootState và AppDispatch. Tuy nhiên, Next's multi-page architecture
+yêu cầu một vài khác biệt so với cài đặt trong single-page app.
+
+6. CREATING A REDUX STORE PER REQUEST
+Sự thay đổi đầu tiên là chuyển từ khai báo store như một biến toàn cục hoặc module-singleton variable, sang khai báo hàm makeStore trả về
+new store cho mỗi request.
+//file lib/store.ts
+Sau khi tạo xong file store.ts chúng ta có một function makeStore - được sử dụng để tạo một đối tượng store mỗi request mà vẫn giữ được 
+an toàn về kiểu mà redux toolkit cung cấp.
+
+7. PROVIDING THE STORE
+Để sử dụng hàm makeStore này, chúng ta cần tạo a new 'client' component that will create the store và share it using the 
+React-Redux Provider component.
+//file app/StoreProvider.tsx
+Ở trong đoạn code ví dụ này, chúng ta đảm bảo rằng this client component được re-render an toàn bằng việc kiểm tra giá trị tham chiếu để
+chắc chắn ràng store này chỉ được tạo 1 lần. This component sẽ chỉ được render 1 lần ở trên server, nhưng có thể được render một vài lần
+ở trên client nếu như có một stateful client component chứa component này, hoặc là nếu components này chứa các biến thay đổi có thể
+gây ra re-render.
+
+Why client components? Bất kì component nào tương tác với Redux store (creating it, providing it, reading from it, or writing to it) cần
+phải là một client component bởi vì để truy cập store cần React context và context thì chỉ available ở client component. 
+
+Bước tiếp theo là chèn StoreProvider vào bất cứ đâu trong cây component trên vị trí mà store sẽ được sử dụng. 
+Bạn có thể đặt store trong component layout nếu tất cả các route sử dụng layout đó đều cần store. 
+Hoặc nếu store chỉ được dùng trong một route cụ thể, bạn có thể tạo và cung cấp store ngay trong route handler đó. 
+Trong tất cả các client component nằm dưới cây, bạn có thể sử dụng store chính xác như bình thường, bằng các hook mà react-redux cung cấp.
+
+8. LOADING INTIAL DATA
+//file app/StoreProvider.tsx
+Nếu bạn cần khởi tạo một store với data từ parent component, khai báo data như là một prop của client StoreProvider component và sử dụng
+Redux on the slice để set data ở trong store như được shown trong file
+
+9. RTK QUERY:
+Chúng tôi đề xuất sử dụng RTK Query để lấy dữ liệu ở trên client only. Data fetching on the server nên 
+sử dụng fetch request from async RSCs
+
+/////TỔNG KẾT//////
+- Tạo một Redux store mỗi request sử dụng configureStore được bọc trong hàm makeStore
+- Cung cấp một Redux store cho các components của ứng dụng React sử dụng client component.
+- Chỉ tương tác với Redux store ở trong client components
+- Sử dụng store bình thường như các hook được cung cấp bởi React-redux
+- Xem xét lại trường hợp bạn có state theo từng route trong TH có global store được đặt ở layout

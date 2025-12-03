@@ -1,0 +1,21 @@
+ "https://api.reavol.vn/api/v1/home/get-home-data?page=0&unLock=false"
+  fetch(collectionAPI)
+        .then((data) => data.json())
+        .then((data) => {
+            console.log(data);
+            console.log(data.data[0]);
+            console.log(data.data[1].freeList)
+        })
+}
+//chuyển đổi dữ liệu thành html
+<div
+            dangerouslySetInnerHTML={{
+                __html: detail.whoShouldRead.replace(/\n/g, '<br />')
+            }}
+        />
+data.data[0].freeBook (dữ liệu của freeBook, đã trả về array => có thể sử dụng map)
+data.data[1].freeList (dữ liệu của freeBook, đã trả về array => có thể sử dụng map)
+data.data[3].forYou (dữ liệu của forYou, sách trong collection, đã trả về array => có thể sử dụng map)
+https://api.reavol.vn/api/v1/article/get-related-article?articleId=145: lấy article liên quan đến 1 freeBook
+https://api.reavol.vn/api/v1/article/get-chapters-of-book?articleId=145: get chapter của cuốn sách (phần phụ lục)
+https://api.reavol.vn/api/v1/article/get-detail-article?articleId=1 get detail book

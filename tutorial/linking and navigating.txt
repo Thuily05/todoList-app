@@ -1,0 +1,42 @@
+Trong next, mặc định route được render ở server. Điều này nghĩa là client cần phải chờ server phản hồi trước khi 1 route mới có thể thấy
+next có các built in là prefetching, streaming và client-side transition đảm bảo rằng việc chuyển hướng nhanh và responsive
+
+This guide giải thích navigation hoạt động trong Next ntn và làm thể nào bạn có thể tối ưu nó cho dynamic routes và slow network
+
+- SSR: Trong next, layouts và pages mặc định là react server components. 
+Ở lần định tuyến đầu tiên và các lần tiếp theo, server component payload được tạo ở trên server trước khi được gửi tới client
+- Có 2 loại server rendering, dựa trên khi nó xảy ra:
++ Static rendering (hoặc prerendering): xảy ra tại build time hoặc during revalidation (xác nhận lại) và kết quả được lưu trữ
++ Dynamic Rendering xảy ra tại thời điểm yêu cầu trả về 1 client request.
+Sự đánh đổi của server rendering là client bắt buộc phải đợi server respond trước khi new route can be shown. Next.js giải quyết (adresses) sự delay này
+bằng prefetching routes (tìm nạp các tuyến đường) user sẽ thăm và thực hiện client-side transistions
+
+- Prefetching: là quá trình loading route ở trong background trước khi user navigates to it. Điều này khiến cho việc navigation between routes in your 
+app cảm giác như tức thì bởi vì ngay khi người dùng click chuột, các dữ liệu để render the next route đã sẵn sàng ở client side
+Next tự động prefetches routes linked with <Link> component khi chúng enter the user's viewport
+
+-dynamic routes: static side renderation: đặt tên folder là gì cũng được, [id], [username],... params lấy ra sẽ đúng với tên mình đặt
+Trong Next.js App Router (Next.js 13+), khi bạn tạo route động kiểu [slug], bạn có thể lấy slug từ URL rất dễ dàng. Mình sẽ giải thích đầy đủ.
+Cấu trúc thư mục:
+app/
+  detailblog/
+    [slug]/
+      page.tsx
+[slug] là dynamic segment → bất kỳ /detailblog/abc hay /detailblog/xyz đều vào trang này.
+slug sẽ được Next.js tự động truyền vào params.
+
+cách lấy slug trong client components
+Nếu bạn muốn dùng slug trong Client Component (ví dụ: để fetch dữ liệu dynamic hoặc gửi analytics):
+
+"use client"
+import { useParams } from "next/navigation"
+export default function DetailBlogClient() {
+  const params = useParams()
+  const slug = params.slug
+  return <div>Slug hiện tại: {slug}</div>
+}
+
+useParams() trả về object với tất cả các segment động.
+giá trị trả về của useParams:
+ví dụ const {id} = useParams
+=> giúp lấy route động

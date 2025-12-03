@@ -1,0 +1,3 @@
+-Tinh nang: them, sua, xoa, filter, danh dau completed
+-State: danh sach todo(array: item todo {id, completed status})
+-action: add, delete, toggle, edit

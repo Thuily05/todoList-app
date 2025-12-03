@@ -1,0 +1,2 @@
+các file trong public có thể truy cập thông qua đường dẫn /
+(ví dụ file nó có thể truy cập nhờ localhost:3000/text.txt)
