@@ -34,7 +34,7 @@ export const todoSlice = createSlice({
         },
         //co the doi ten bien action va state
         editTodo: (state, action) => {
-            const { id, text } = action.payload;
+            const { id, text } = action.payload; //lấy ra id và text của action.payload
             const todo = state.todos.find(todo => todo.id === id);
             if (!todo) return;
             todo.text = text;

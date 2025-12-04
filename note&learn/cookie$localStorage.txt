@@ -1,0 +1,30 @@
+//COOKIE: cookie là một đoạn dữ liệu nhỏ (string) được trình duyệt lưu lại để : 
+- ghi nhớ trạng thái login
+- ghi nhớ token
+- ghi nhớ lựa chọn người dùng
+- giúp server nhận ra 'ai đang gửi request'
+Tồn tịa bên ngoài Redux, không bị mất khi reload trang
+
+//localStorage là gì? là bộ nhớ trình duyệt, dùng để lưu trữ lâu dài cho website:
++ dữ liệu không bị mất khi reload trang
++ không bị mất khi tắt tab
++ không bị mất khi tắt trình duyệt
++ chỉ mất khi xóa tay hoặc code xóa
+localStorage chỉ lưu được string, muốn lưu object thì phải JSON.stringify()
+VD: lưu: localStorage.setItem('username','Thuily'); lấy localStorage.getItem('username') //Thuily
+localStorage.removeItem('username'); xóa toàn bộ localStorage.clear()
+
+các TH hay sử dụng localStorage: 
++ lưu theme (dark/night)
++ lưu token (không an toàn bằng cookie)
++ lưu ngôn ngữ
++ lưu giỏ hàng
++ lưu thông tin user 
++ lưu config app
+
+// SO SÁNH localStorage vs COOKIE:
+- Dung lượng: 5Mb - 4Kb
+- Tự gửi trọng mỗi request: Không - Có
+- Dùng cho: Config, data - Token, session
+- Bảo mật: Trung bình - Có thể rất cao (HttpOnly)
+- Thời gian sống: Vĩnh viễn đến khi xóa - Có thể đặt hạn
